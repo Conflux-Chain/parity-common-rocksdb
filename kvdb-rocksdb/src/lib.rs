@@ -499,6 +499,13 @@ impl Database {
 		iter::IterationHandler::iter(&self.inner, col, read_opts)
 	}
 
+	/// Iterator over data in the `col` database column index from the key
+	pub fn iter_from<'a>(&'a self, col: u32, key: &[u8]) -> impl Iterator<Item = io::Result<DBKeyValue>> + 'a {
+		let mut read_opts = generate_read_options();
+		read_opts.set_iterate_lower_bound(key);
+		iter::IterationHandler::iter(&self.inner, col, read_opts)
+	}
+
 	/// Iterator over data in the `col` database column index matching the given prefix.
 	/// Will hold a lock until the iterator is dropped
 	/// preventing the database from being closed.
