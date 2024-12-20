@@ -499,6 +499,12 @@ impl Database {
 		iter::IterationHandler::iter(&self.inner, col, read_opts)
 	}
 
+	/// Iterator over data in the `col` database column index from the key
+	pub fn iter_from<'a>(&'a self, col: u32, key: &[u8]) -> impl Iterator<Item = io::Result<DBKeyValue>> + 'a {
+		let read_opts = generate_read_options();
+		iter::IterationHandler::iter_from(&self.inner, col, key, read_opts)
+	}
+
 	/// Iterator over data in the `col` database column index matching the given prefix.
 	/// Will hold a lock until the iterator is dropped
 	/// preventing the database from being closed.
@@ -508,7 +514,7 @@ impl Database {
 		if let Some(end_prefix) = kvdb::end_prefix(prefix) {
 			read_opts.set_iterate_upper_bound(end_prefix);
 		}
-		iter::IterationHandler::iter_with_prefix(&self.inner, col, prefix, read_opts)
+		iter::IterationHandler::iter_from(&self.inner, col, prefix, read_opts)
 	}
 
 	/// The number of column families in the db.

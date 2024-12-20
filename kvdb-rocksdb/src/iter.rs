@@ -31,7 +31,7 @@ pub trait IterationHandler {
 	/// `ReadOptions` to allow configuration of the new iterator (see
 	/// https://github.com/facebook/rocksdb/blob/master/include/rocksdb/options.h#L1169).
 	/// The `Iterator` iterates over keys which start with the provided `prefix`.
-	fn iter_with_prefix(self, col: u32, prefix: &[u8], read_opts: ReadOptions) -> Self::Iterator;
+	fn iter_from(self, col: u32, prefix: &[u8], read_opts: ReadOptions) -> Self::Iterator;
 }
 
 impl<'a> IterationHandler for &'a DBAndColumns {
@@ -44,7 +44,7 @@ impl<'a> IterationHandler for &'a DBAndColumns {
 		}
 	}
 
-	fn iter_with_prefix(self, col: u32, prefix: &[u8], read_opts: ReadOptions) -> Self::Iterator {
+	fn iter_from(self, col: u32, prefix: &[u8], read_opts: ReadOptions) -> Self::Iterator {
 		match self.cf(col as usize) {
 			Ok(cf) => EitherIter::A(KvdbAdapter(self.db.iterator_cf_opt(
 				cf,
