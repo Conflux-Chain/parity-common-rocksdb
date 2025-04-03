@@ -17,7 +17,7 @@ use std::{
 };
 
 use rocksdb::{
-	BlockBasedOptions, ColumnFamily, ColumnFamilyDescriptor, Options, ReadOptions, WriteBatch, WriteOptions, DB,
+	BlockBasedIndexType, BlockBasedOptions, ColumnFamily, ColumnFamilyDescriptor, Options, ReadOptions, WriteBatch, WriteOptions, DB
 };
 
 use kvdb::{DBKeyValue, DBOp, DBTransaction, DBValue, KeyValueDB};
@@ -314,16 +314,19 @@ fn generate_block_based_options(config: &DatabaseConfig) -> io::Result<BlockBase
 	if cache_size == 0 {
 		block_opts.disable_cache()
 	} else {
+		block_opts.set_index_type(BlockBasedIndexType::TwoLevelIndexSearch);
+		block_opts.set_partition_filters(true);
+		block_opts.set_metadata_block_size(4096);
+		block_opts.set_cache_index_and_filter_blocks(true);
+		block_opts.set_pin_top_level_index_and_filter(true);
+		// block_opts.set_cache_index_and_filter_blocks_with_high_priority(true);
+		block_opts.set_pin_l0_filter_and_index_blocks_in_cache(true);
+		// block cache size: if you used to store the filter/index into heap, do not forget to increase the block cache size with the amount of memory that you are saving from the heap.
 		let cache = rocksdb::Cache::new_lru_cache(cache_size).map_err(other_io_err)?;
 		block_opts.set_block_cache(&cache);
-		// "index and filter blocks will be stored in block cache, together with all other data blocks."
-		// See: https://github.com/facebook/rocksdb/wiki/Memory-usage-in-RocksDB#indexes-and-filter-blocks
-		block_opts.set_cache_index_and_filter_blocks(true);
-		// Don't evict L0 filter/index blocks from the cache
-		block_opts.set_pin_l0_filter_and_index_blocks_in_cache(true);
 	}
-	block_opts.set_bloom_filter(10.0, true);
-
+	block_opts.set_bloom_filter(10.0, false); // NewBloomFilterPolicy(BITS, false)
+	
 	Ok(block_opts)
 }
 
