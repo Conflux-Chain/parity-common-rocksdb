@@ -49,7 +49,7 @@ impl<T: Decodable> Decodable for Box<T> {
 		T::decode(rlp).map(Box::new)
 	}
 }
-
+#[cfg(not(feature = "legacy_bool_encoding"))]
 impl Encodable for bool {
 	fn rlp_append(&self, s: &mut RlpStream) {
 		let as_uint = u8::from(*self);
@@ -57,6 +57,7 @@ impl Encodable for bool {
 	}
 }
 
+#[cfg(not(feature = "legacy_bool_encoding"))]
 impl Decodable for bool {
 	fn decode(rlp: &Rlp) -> Result<Self, DecoderError> {
 		let as_uint = <u8 as Decodable>::decode(rlp)?;
@@ -65,6 +66,23 @@ impl Decodable for bool {
 			1 => Ok(true),
 			_ => Err(DecoderError::Custom("invalid boolean value")),
 		}
+	}
+}
+
+#[cfg(feature = "legacy_bool_encoding")]
+impl Encodable for bool {
+	fn rlp_append(&self, s: &mut RlpStream) {
+		s.encoder().encode_iter(once(if *self { 1u8 } else { 0 }));
+	}
+}
+#[cfg(feature = "legacy_bool_encoding")]
+impl Decodable for bool {
+	fn decode(rlp: &Rlp) -> Result<Self, DecoderError> {
+		rlp.decoder().decode_value(|bytes| match bytes.len() {
+			0 => Ok(false),
+			1 => Ok(bytes[0] != 0),
+			_ => Err(DecoderError::RlpIsTooBig),
+		})
 	}
 }
 

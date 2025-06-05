@@ -636,12 +636,25 @@ fn test_rlp_is_int() {
 }
 
 #[test]
+#[cfg(not(feature = "legacy_bool_encoding"))]
 fn test_bool_same_as_int() {
 	assert_eq!(rlp::encode(&false), rlp::encode(&0x00u8));
 	assert_eq!(rlp::encode(&true), rlp::encode(&0x01u8));
 	let two = rlp::encode(&0x02u8);
 	let invalid: Result<bool, _> = rlp::decode(&two);
 	invalid.unwrap_err();
+}
+#[test]
+#[cfg(feature = "legacy_bool_encoding")]
+fn test_legacy_bool() {
+	// false -> 0u8 -> RLP 0x00
+	// true  -> 1u8 -> RLP 0x01
+	assert_eq!(rlp::encode(&false).as_ref(), hex!("00"));
+	assert_eq!(rlp::encode(&true).as_ref(), hex!("01"));
+
+	assert_eq!(rlp::decode::<bool>(&hex!("00")), Ok(false));
+	assert_eq!(rlp::decode::<bool>(&hex!("01")), Ok(true));
+	assert_eq!(rlp::decode::<bool>(&hex!("02")), Ok(true));
 }
 
 // test described in
