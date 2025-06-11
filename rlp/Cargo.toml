@@ -22,7 +22,7 @@ primitive-types = { path = "../primitive-types", version = "0.13", features = ["
 default = ["std"]
 std = ["bytes/std", "rustc-hex/std"]
 derive = ["rlp-derive"]
-
+legacy_bool_encoding = []
 [[bench]]
 name = "rlp"
 path = "benches/rlp.rs"
