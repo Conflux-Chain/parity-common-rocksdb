@@ -502,7 +502,18 @@ impl Database {
 		iter::IterationHandler::iter(&self.inner, col, read_opts)
 	}
 
-	/// Iterator over data in the `col` database column index from the key
+	/// Iterator reversely over the data in the given database column index.
+	/// Will hold a lock until the iterator is dropped
+	/// preventing the database from being closed.
+	pub fn iter_rev<'a>(&'a self, col: u32) -> impl Iterator<Item = io::Result<DBKeyValue>> + 'a {
+		let read_opts = generate_read_options();
+		iter::IterationHandler::iter_rev(&self.inner, col, read_opts)
+	}
+
+	/// Creates an iterator over a database column (`col`), starting from the first key
+	/// that is greater than or equal to the provided `key`.
+	/// Will hold a lock until the iterator is dropped
+	/// preventing the database from being closed.
 	pub fn iter_from<'a>(&'a self, col: u32, key: &[u8]) -> impl Iterator<Item = io::Result<DBKeyValue>> + 'a {
 		let read_opts = generate_read_options();
 		iter::IterationHandler::iter_from(&self.inner, col, key, read_opts)

@@ -27,11 +27,16 @@ pub trait IterationHandler {
 	/// `ReadOptions` to allow configuration of the new iterator (see
 	/// https://github.com/facebook/rocksdb/blob/master/include/rocksdb/options.h#L1169).
 	fn iter(self, col: u32, read_opts: ReadOptions) -> Self::Iterator;
-	/// Create an `Iterator` over a `ColumnFamily` corresponding to the passed index. Takes
-	/// `ReadOptions` to allow configuration of the new iterator (see
-	/// https://github.com/facebook/rocksdb/blob/master/include/rocksdb/options.h#L1169).
-	/// The `Iterator` iterates over keys which start with the provided `prefix`.
+	/// Creates an iterator over a `ColumnFamily` specified by the `col` index.
+	///
+	/// The iterator is positioned at the first key-value pair whose key is
+	/// greater than or equal to `prefix`. 
 	fn iter_from(self, col: u32, prefix: &[u8], read_opts: ReadOptions) -> Self::Iterator;
+	/// Creates a reverse iterator over a `ColumnFamily` specified by the `col` index.
+	///
+	/// The iterator traverses all key-value pairs in descending key order,
+	/// starting from the last key in the column family.
+	fn iter_rev(self, col: u32, read_opts: ReadOptions) -> Self::Iterator;
 }
 
 impl<'a> IterationHandler for &'a DBAndColumns {
@@ -51,6 +56,13 @@ impl<'a> IterationHandler for &'a DBAndColumns {
 				read_opts,
 				IteratorMode::From(prefix, Direction::Forward),
 			))),
+			Err(e) => EitherIter::B(std::iter::once(Err(e))),
+		}
+	}
+
+	fn iter_rev(self, col: u32, read_opts: ReadOptions) -> Self::Iterator {
+		match self.cf(col as usize) {
+			Ok(cf) => EitherIter::A(KvdbAdapter(self.db.iterator_cf_opt(cf, read_opts, IteratorMode::End))),
 			Err(e) => EitherIter::B(std::iter::once(Err(e))),
 		}
 	}
