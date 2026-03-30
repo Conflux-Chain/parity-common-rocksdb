@@ -25,13 +25,13 @@ regex = "1.3.1"
 default-features = false
 features = ["snappy"]
 git = "https://github.com/rongma7/rust-rocksdb"
-rev = "261fcc4"
+rev = "f74f0c8e9040ea43ad38f4df78d3ec184e126e1b"
 
 [target.'cfg(not(any(target_os = "openbsd", target_env = "msvc")))'.dependencies.rocksdb]
 default-features = false
 features = ["snappy", "jemalloc"]
 git = "https://github.com/rongma7/rust-rocksdb"
-rev = "261fcc4"
+rev = "f74f0c8e9040ea43ad38f4df78d3ec184e126e1b"
 
 [dev-dependencies]
 alloc_counter = "0.0.4"
